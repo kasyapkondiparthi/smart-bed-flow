@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 33% 98%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    --primary: 210 90% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 160 50% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 15% 50%;
+
+    --accent: 210 40% 92%;
+    --accent-foreground: 210 90% 35%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 40 95% 55%;
+    --warning-foreground: 30 80% 20%;
+
+    --success: 150 60% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 210 90% 45%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Premium Slate Dark Theme */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 12%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222 47% 12%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 160 60% 50%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components {
+  .stat-card {
+    @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-500 hover:shadow-[0_8px_32px_rgba(var(--primary),0.15)] hover:-translate-y-1 hover:border-white/20;
+  }
+  .glass-panel {
+    @apply bg-slate-900/40 backdrop-blur-2xl border border-white/5 rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.5)];
+  }
+  .severity-critical {
+    @apply bg-red-500/10 text-red-500 font-semibold px-3 py-1 rounded-full text-xs border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)];
+  }
+  .severity-moderate {
+    @apply bg-yellow-500/10 text-yellow-500 font-semibold px-3 py-1 rounded-full text-xs border border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.2)];
+  }
+  .severity-low {
+    @apply bg-green-500/10 text-green-500 font-semibold px-3 py-1 rounded-full text-xs border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.2)];
+  }
+  .badge-available {
+    @apply bg-green-500/10 text-green-500 font-medium px-2.5 py-0.5 rounded-full text-xs border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)];
+  }
+  .badge-full {
+    @apply bg-red-500/10 text-red-500 font-medium px-2.5 py-0.5 rounded-full text-xs border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)];
+  }
+  .badge-waiting {
+    @apply bg-yellow-500/10 text-yellow-500 font-medium px-2.5 py-0.5 rounded-full text-xs border border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)];
+  }
+}
