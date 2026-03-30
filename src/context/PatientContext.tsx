@@ -31,6 +31,7 @@ interface PatientContextType {
   icuAvailable: number;
   normalAvailable: number;
   fetchPatientsList: () => Promise<void>;
+  refreshHistory: () => Promise<void>;
   handleAllocate: (input: PatientInput) => Promise<void>;
   handleUpdatePatient: (id: string, input: PatientInput) => Promise<void>;
   handleRemovePatient: (id: string) => Promise<void>;
@@ -301,6 +302,63 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, [fetchPatientsList, logHistory]);
 
+  const refreshHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Re-fetch patients from DB
+      const { data, error } = await supabase
+        .from("patients")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const freshPatients = (data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        severity: p.severity,
+        needsICU: p.needs_icu,
+        assignedBed: p.assigned_bed,
+        bedNumber: p.bed_number,
+        floorNumber: p.floor_number,
+        oxygenLevel: p.oxygen_level,
+        heartRate: p.heart_rate,
+        createdAt: p.created_at,
+      }));
+
+      // Re-read history from localStorage
+      const saved = localStorage.getItem("hospital_history");
+      const storedHistory: HistoryEntry[] = saved ? JSON.parse(saved) : [];
+
+      // Backfill any patients not yet in history
+      const existingIds = new Set(storedHistory.map((h) => h.patientId).filter(Boolean));
+      const newEntries: HistoryEntry[] = freshPatients
+        .filter((p) => !existingIds.has(p.id))
+        .map((p) => ({
+          id: Math.random().toString(36).substr(2, 9),
+          patientId: p.id,
+          name: p.name,
+          severity: p.severity,
+          needsICU: p.needsICU,
+          assignedBed: p.assignedBed,
+          bedNumber: p.bedNumber,
+          floorNumber: p.floorNumber,
+          actionType: "Added" as const,
+          timestamp: p.createdAt,
+        }));
+
+      const merged = [...newEntries, ...storedHistory];
+      localStorage.setItem("hospital_history", JSON.stringify(merged.slice(0, 100)));
+      setHistory(merged.slice(0, 100));
+      setPatients(freshPatients);
+      toast.success("Patient history refreshed successfully");
+    } catch {
+      toast.error("Failed to refresh history");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const handleReset = useCallback(async () => {
     setLoading(true);
     try {
@@ -333,6 +391,7 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
       icuAvailable,
       normalAvailable,
       fetchPatientsList,
+      refreshHistory,
       handleAllocate,
       handleUpdatePatient,
       handleRemovePatient,

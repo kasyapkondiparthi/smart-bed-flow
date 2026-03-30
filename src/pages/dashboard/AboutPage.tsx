@@ -22,16 +22,96 @@ import { cn } from "@/lib/utils";
 
 const AboutPage = () => {
   const features = [
-    { icon: <Zap className="w-5 h-5" />, title: "Priority Allocation", desc: "Critical > Moderate > Low logic" },
-    { icon: <Bed className="w-5 h-5" />, title: "Bed/Floor Mapping", desc: "Automated ICU & Ward routing" },
-    { icon: <LayoutDashboard className="w-5 h-5" />, title: "Live Analytics", desc: "Real-time occupancy telemetry" },
-    { icon: <MessageSquare className="w-5 h-5" />, title: "AI Assistant", desc: "Rule-based natural language parsing" },
-    { icon: <Mic className="w-5 h-5" />, title: "Voice Control", desc: "Full STT/TTS clinical interface" },
-    { icon: <History className="w-5 h-5" />, title: "Audit History", desc: "Time-slot based event tracking" },
-    { icon: <FileDown className="w-5 h-5" />, title: "CSV Data Export", desc: "Shift-based reporting & archiving" },
-    { icon: <Clock className="w-5 h-5" />, title: "Shift Management", desc: "Live clock & atomic end-shift reset" },
-    { icon: <Settings className="w-5 h-5" />, title: "Patient Lifecycle", desc: "Search, Edit, & Delete management" },
-    { icon: <AlertTriangle className="w-5 h-5" />, title: "Critical Alerts", desc: "Automated ICU capacity warnings" },
+    {
+      icon: <Zap className="w-5 h-5" />,
+      title: "Priority Allocation",
+      desc: "Intelligent triage engine that routes patients by severity — Critical first, then Moderate, then Low — ensuring life-critical cases never wait.",
+      accent: "from-yellow-500/20 to-amber-500/5",
+      iconBg: "bg-amber-500/15 border-amber-500/30 text-amber-400",
+      glow: "shadow-[0_0_20px_rgba(245,158,11,0.25)]",
+      bar: "bg-amber-500",
+    },
+    {
+      icon: <Bed className="w-5 h-5" />,
+      title: "Bed & Floor Mapping",
+      desc: "Automated assignment of ICU and ward beds with real-time tracking of bed numbers and floor location across the entire facility.",
+      accent: "from-blue-500/20 to-blue-500/5",
+      iconBg: "bg-blue-500/15 border-blue-500/30 text-blue-400",
+      glow: "shadow-[0_0_20px_rgba(59,130,246,0.25)]",
+      bar: "bg-blue-500",
+    },
+    {
+      icon: <LayoutDashboard className="w-5 h-5" />,
+      title: "Live Analytics",
+      desc: "Real-time occupancy telemetry with dynamic charts showing ICU vs. Ward utilization, wait queues, and severity breakdowns.",
+      accent: "from-sky-500/20 to-sky-500/5",
+      iconBg: "bg-sky-500/15 border-sky-500/30 text-sky-400",
+      glow: "shadow-[0_0_20px_rgba(14,165,233,0.25)]",
+      bar: "bg-sky-500",
+    },
+    {
+      icon: <MessageSquare className="w-5 h-5" />,
+      title: "AI Triage Assistant",
+      desc: "Rule-based NLP chatbot that interprets clinical queries, answers capacity questions, and guides staff through patient intake workflows.",
+      accent: "from-violet-500/20 to-violet-500/5",
+      iconBg: "bg-violet-500/15 border-violet-500/30 text-violet-400",
+      glow: "shadow-[0_0_20px_rgba(139,92,246,0.25)]",
+      bar: "bg-violet-500",
+    },
+    {
+      icon: <Mic className="w-5 h-5" />,
+      title: "Voice Control",
+      desc: "Full speech-to-text and text-to-speech integration for hands-free clinical operation — critical in sterile or high-pressure environments.",
+      accent: "from-rose-500/20 to-rose-500/5",
+      iconBg: "bg-rose-500/15 border-rose-500/30 text-rose-400",
+      glow: "shadow-[0_0_20px_rgba(244,63,94,0.25)]",
+      bar: "bg-rose-500",
+    },
+    {
+      icon: <History className="w-5 h-5" />,
+      title: "Audit History",
+      desc: "Immutable, time-stamped event log of every patient action — admissions, updates, and discharges — filterable by date and shift slot.",
+      accent: "from-teal-500/20 to-teal-500/5",
+      iconBg: "bg-teal-500/15 border-teal-500/30 text-teal-400",
+      glow: "shadow-[0_0_20px_rgba(20,184,166,0.25)]",
+      bar: "bg-teal-500",
+    },
+    {
+      icon: <FileDown className="w-5 h-5" />,
+      title: "CSV Data Export",
+      desc: "One-click shift reports exported as structured CSV files — ready for compliance archiving, administrative review, or BI analysis.",
+      accent: "from-emerald-500/20 to-emerald-500/5",
+      iconBg: "bg-emerald-500/15 border-emerald-500/30 text-emerald-400",
+      glow: "shadow-[0_0_20px_rgba(16,185,129,0.25)]",
+      bar: "bg-emerald-500",
+    },
+    {
+      icon: <Clock className="w-5 h-5" />,
+      title: "Shift Management",
+      desc: "Live shift clock with atomic end-of-shift resets that archive all data, clear active state, and prepare the system for the next shift.",
+      accent: "from-orange-500/20 to-orange-500/5",
+      iconBg: "bg-orange-500/15 border-orange-500/30 text-orange-400",
+      glow: "shadow-[0_0_20px_rgba(249,115,22,0.25)]",
+      bar: "bg-orange-500",
+    },
+    {
+      icon: <Settings className="w-5 h-5" />,
+      title: "Patient Lifecycle",
+      desc: "Full CRUD management — search, edit vitals, reassign severity, and safely remove patients with automatic bed reallocation on change.",
+      accent: "from-indigo-500/20 to-indigo-500/5",
+      iconBg: "bg-indigo-500/15 border-indigo-500/30 text-indigo-400",
+      glow: "shadow-[0_0_20px_rgba(99,102,241,0.25)]",
+      bar: "bg-indigo-500",
+    },
+    {
+      icon: <AlertTriangle className="w-5 h-5" />,
+      title: "Critical Alerts",
+      desc: "Automated ICU capacity warnings trigger when thresholds are breached — ensuring staff are notified before a crisis becomes catastrophic.",
+      accent: "from-red-500/20 to-red-500/5",
+      iconBg: "bg-red-500/15 border-red-500/30 text-red-400",
+      glow: "shadow-[0_0_20px_rgba(239,68,68,0.25)]",
+      bar: "bg-red-500",
+    },
   ];
 
   const container = {
@@ -94,30 +174,58 @@ const AboutPage = () => {
 
       {/* FEATURES GRID */}
       <div className="space-y-8">
-        <h2 className="text-xl font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-4">
-          <Zap className="w-5 h-5" />
-          Key Features
-          <div className="h-px flex-1 bg-white/5" />
-        </h2>
-        <motion.div 
+        {/* Section header */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+              <Zap className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-widest">Key Features</h2>
+              <p className="text-[10px] font-black text-primary/50 uppercase tracking-[0.4em]">What powers this system</p>
+            </div>
+          </div>
+          <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent ml-4" />
+        </div>
+
+        <motion.div
           variants={container}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           {features.map((f, i) => (
-            <motion.div 
-              key={i} 
+            <motion.div
+              key={i}
               variants={item}
-              className="glass-panel p-6 space-y-4 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-default"
+              className={cn(
+                "group relative flex gap-5 p-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br overflow-hidden cursor-default",
+                "transition-all duration-300 hover:-translate-y-1 hover:border-white/10",
+                f.accent,
+                f.glow
+              )}
             >
-              <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary shadow-inner">
+              {/* Left accent bar */}
+              <div className={cn("absolute left-0 top-4 bottom-4 w-[3px] rounded-full opacity-70 group-hover:opacity-100 transition-opacity", f.bar)} />
+
+              {/* Icon */}
+              <div className={cn(
+                "shrink-0 h-11 w-11 rounded-xl border flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg",
+                f.iconBg
+              )}>
                 {f.icon}
               </div>
-              <div>
-                <h3 className="font-bold text-sm text-white tracking-wide">{f.title}</h3>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">{f.desc}</p>
+
+              {/* Text */}
+              <div className="flex-1 min-w-0 pr-8">
+                <h3 className="font-black text-sm text-white tracking-wide leading-tight">{f.title}</h3>
+                <p className="text-[11px] text-slate-400 font-medium leading-relaxed mt-1.5">{f.desc}</p>
+              </div>
+
+              {/* Number badge */}
+              <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                <span className="text-[9px] font-black text-slate-500">{String(i + 1).padStart(2, "0")}</span>
               </div>
             </motion.div>
           ))}

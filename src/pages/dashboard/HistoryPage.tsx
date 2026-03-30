@@ -41,7 +41,7 @@ import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 const HistoryPage = () => {
-  const { history, fetchPatientsList, loading } = usePatients();
+  const { history, refreshHistory, loading } = usePatients();
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [timeSlot, setTimeSlot] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -154,7 +154,7 @@ const HistoryPage = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchPatientsList()}
+            onClick={() => refreshHistory()}
             disabled={loading}
             className="bg-white/5 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl gap-2"
           >
