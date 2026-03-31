@@ -30,7 +30,7 @@ const BedUsageChart = ({ icuUsed, icuAvailable, normalUsed, normalAvailable, wai
         <div className="p-2.5 rounded-xl bg-primary/10">
           <BarChart3 className="w-5 h-5 text-primary drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
         </div>
-        <h2 className="text-lg font-semibold text-white tracking-wide uppercase">Occupancy Matrix</h2>
+        <h2 className="text-lg font-semibold text-foreground tracking-wide uppercase">Occupancy Matrix</h2>
       </div>
 
       <div className="flex-1 min-h-[260px] relative">
@@ -44,7 +44,8 @@ const BedUsageChart = ({ icuUsed, icuAvailable, normalUsed, normalAvailable, wai
               outerRadius={95}
               paddingAngle={5}
               dataKey="value"
-              stroke="rgba(0,0,0,0.5)"
+              stroke="currentColor"
+              className="stroke-background"
               strokeWidth={2}
               animationBegin={0}
               animationDuration={1200}
@@ -53,7 +54,7 @@ const BedUsageChart = ({ icuUsed, icuAvailable, normalUsed, normalAvailable, wai
                 <Cell
                   key={`cell-${index}`}
                   fill={entry.color}
-                  style={{ filter: `drop-shadow(0px 0px 8px ${entry.color})` }}
+                  style={{ filter: `drop-shadow(0px 0px 4px ${entry.color}44)` }}
                 />
               ))}
             </Pie>
@@ -61,14 +62,15 @@ const BedUsageChart = ({ icuUsed, icuAvailable, normalUsed, normalAvailable, wai
               formatter={formatTooltip}
               contentStyle={{
                 borderRadius: "1rem",
-                border: "1px solid rgba(255,255,255,0.1)",
-                backgroundColor: "rgba(15, 23, 42, 0.9)",
+                border: "1px solid hsl(var(--border))",
+                backgroundColor: "hsl(var(--popover))",
                 backdropFilter: "blur(10px)",
-                boxShadow: "0 10px 25px -5px rgba(0,0,0,0.5), 0 0 15px rgba(59,130,246,0.3)",
+                boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
                 fontSize: "0.875rem",
                 padding: "10px 14px",
-                color: "white"
+                color: "hsl(var(--popover-foreground))"
               }}
+              itemStyle={{ color: "hsl(var(--popover-foreground))" }}
             />
             <Legend
               verticalAlign="bottom"
@@ -79,7 +81,7 @@ const BedUsageChart = ({ icuUsed, icuAvailable, normalUsed, normalAvailable, wai
               formatter={(value, entry: any) => {
                 const { payload } = entry;
                 const percent = totalBeds > 0 ? Math.round((payload.value / totalBeds) * 100) : 0;
-                return <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase ml-1">{value} ({percent}%)</span>;
+                return <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase ml-1">{value} ({percent}%)</span>;
               }}
             />
           </PieChart>
@@ -87,8 +89,8 @@ const BedUsageChart = ({ icuUsed, icuAvailable, normalUsed, normalAvailable, wai
 
         {/* Center label */}
         <div className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-          <div className="text-3xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{icuUsed + normalUsed}</div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total<br />Occupied</div>
+          <div className="text-3xl font-black text-foreground drop-shadow-sm">{icuUsed + normalUsed}</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Total<br />Occupied</div>
         </div>
       </div>
     </div>

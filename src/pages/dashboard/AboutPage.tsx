@@ -142,7 +142,7 @@ const AboutPage = () => {
           <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-primary drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] tracking-tight uppercase">
+          <h1 className="text-5xl font-black text-foreground dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-blue-400 dark:to-primary drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] tracking-tight uppercase">
             Hospital Command Center
           </h1>
           <p className="text-xs font-black text-primary/60 uppercase tracking-[0.6em] ml-2">
@@ -156,17 +156,17 @@ const AboutPage = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
-        className="glass-panel p-10 relative overflow-hidden group"
+        className="glass-panel p-10 relative overflow-hidden group border-border shadow-sm"
       >
-        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+        <div className="absolute top-0 right-0 p-8 opacity-5 dark:opacity-10 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity">
           <Globe className="w-32 h-32 text-primary" />
         </div>
         <div className="relative z-10 space-y-4 max-w-3xl">
-          <h2 className="text-2xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+          <h2 className="text-2xl font-black text-foreground uppercase tracking-widest flex items-center gap-3">
             <Monitor className="w-6 h-6 text-primary" />
             Project Overview
           </h2>
-          <p className="text-lg text-slate-300 leading-relaxed font-medium">
+          <p className="text-lg text-muted-foreground leading-relaxed font-medium">
             This system is a real-time hospital command center designed to optimize patient allocation and resource management using intelligent logic, deep analytics, and interactive triage tools. Built for high-stakes medical environments, it ensures that every patient is routed to the appropriate level of care with millisecond precision.
           </p>
         </div>
@@ -181,7 +181,7 @@ const AboutPage = () => {
               <Zap className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-white uppercase tracking-widest">Key Features</h2>
+              <h2 className="text-2xl font-black text-foreground uppercase tracking-widest">Key Features</h2>
               <p className="text-[10px] font-black text-primary/50 uppercase tracking-[0.4em]">What powers this system</p>
             </div>
           </div>
@@ -200,8 +200,8 @@ const AboutPage = () => {
               key={i}
               variants={item}
               className={cn(
-                "group relative flex gap-5 p-5 rounded-2xl border border-white/[0.06] bg-gradient-to-br overflow-hidden cursor-default",
-                "transition-all duration-300 hover:-translate-y-1 hover:border-white/10",
+                "group relative flex gap-5 p-5 rounded-2xl border border-border bg-gradient-to-br overflow-hidden cursor-default",
+                "transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-none dark:hover:border-white/10",
                 f.accent,
                 f.glow
               )}
@@ -219,13 +219,13 @@ const AboutPage = () => {
 
               {/* Text */}
               <div className="flex-1 min-w-0 pr-8">
-                <h3 className="font-black text-sm text-white tracking-wide leading-tight">{f.title}</h3>
-                <p className="text-[11px] text-slate-400 font-medium leading-relaxed mt-1.5">{f.desc}</p>
+                <h3 className="font-black text-sm text-foreground tracking-wide leading-tight">{f.title}</h3>
+                <p className="text-[11px] text-muted-foreground font-medium leading-relaxed mt-1.5">{f.desc}</p>
               </div>
 
               {/* Number badge */}
-              <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                <span className="text-[9px] font-black text-slate-500">{String(i + 1).padStart(2, "0")}</span>
+              <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-muted border border-border flex items-center justify-center">
+                <span className="text-[9px] font-black text-muted-foreground/50">{String(i + 1).padStart(2, "0")}</span>
               </div>
             </motion.div>
           ))}
@@ -238,9 +238,9 @@ const AboutPage = () => {
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="glass-panel p-8 space-y-6"
+          className="glass-panel p-8 space-y-6 border-border shadow-sm"
         >
-          <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+          <h2 className="text-xl font-black text-foreground uppercase tracking-widest flex items-center gap-3">
             <Brain className="w-6 h-6 text-primary" />
             System Modules
           </h2>
@@ -252,10 +252,10 @@ const AboutPage = () => {
               { label: "Triage Assistant", desc: "Intelligent chatbot with full voice integration" }
             ].map((m, i) => (
               <div key={i} className="flex items-center gap-4 group">
-                <div className="h-2 w-2 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                <div className="h-2 w-2 rounded-full bg-primary group-hover:scale-150 transition-all shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                 <div className="flex-1">
-                  <span className="text-sm font-black text-white uppercase tracking-widest block">{m.label}</span>
-                  <span className="text-[11px] font-bold text-slate-500">{m.desc}</span>
+                  <span className="text-sm font-black text-foreground uppercase tracking-widest block">{m.label}</span>
+                  <span className="text-[11px] font-bold text-muted-foreground">{m.desc}</span>
                 </div>
               </div>
             ))}
@@ -267,20 +267,20 @@ const AboutPage = () => {
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="glass-panel p-8 space-y-6"
+          className="glass-panel p-8 space-y-6 border-border shadow-sm"
         >
-          <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+          <h2 className="text-xl font-black text-foreground uppercase tracking-widest flex items-center gap-3">
             <Database className="w-6 h-6 text-primary" />
             Technology Stack
           </h2>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: "React", icon: "⚛", color: "bg-blue-500/10 text-blue-400" },
-              { label: "Supabase", icon: "🗄", color: "bg-green-500/10 text-green-400" },
-              { label: "Tailwind", icon: "🎨", color: "bg-cyan-500/10 text-cyan-400" },
-              { label: "Recharts", icon: "📊", color: "bg-orange-500/10 text-orange-400" }
+              { label: "React", icon: "⚛", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
+              { label: "Supabase", icon: "🗄", color: "bg-green-500/10 text-green-600 dark:text-green-400" },
+              { label: "Tailwind", icon: "🎨", color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" },
+              { label: "Recharts", icon: "📊", color: "bg-orange-500/10 text-orange-600 dark:text-orange-400" }
             ].map((t, i) => (
-              <div key={i} className={cn("flex items-center gap-4 p-4 rounded-2xl border border-white/5 group", t.color)}>
+              <div key={i} className={cn("flex items-center gap-4 p-4 rounded-2xl border border-border group dark:border-white/5", t.color)}>
                 <span className="text-2xl group-hover:scale-125 transition-transform">{t.icon}</span>
                 <span className="text-xs font-black uppercase tracking-widest">{t.label}</span>
               </div>
@@ -294,12 +294,12 @@ const AboutPage = () => {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="glass-panel p-10 border-primary/20 bg-primary/5 shadow-[0_0_40px_rgba(59,130,246,0.1)] text-center relative overflow-hidden"
+        className="glass-panel p-10 border-primary/20 bg-primary/5 shadow-[0_4px_30px_rgba(59,130,246,0.05)] dark:shadow-[0_0_40px_rgba(59,130,246,0.1)] text-center relative overflow-hidden"
       >
         <div className="relative z-10 max-w-3xl mx-auto space-y-4">
-          <h2 className="text-2xl font-black text-white uppercase tracking-widest">Real-World Impact</h2>
-          <p className="text-lg text-slate-400 leading-relaxed font-bold">
-            This system improves hospital efficiency by <span className="text-white italic underline underline-offset-4 decoration-primary">automating patient prioritization</span>, enabling real-time infrastructure monitoring, and supporting high-velocity clinical decisions, ultimately enhancing patient care outcomes and hospital resource utilization.
+          <h2 className="text-2xl font-black text-foreground uppercase tracking-widest">Real-World Impact</h2>
+          <p className="text-lg text-muted-foreground leading-relaxed font-bold">
+            This system improves hospital efficiency by <span className="text-foreground italic underline underline-offset-4 decoration-primary dark:text-white">automating patient prioritization</span>, enabling real-time infrastructure monitoring, and supporting high-velocity clinical decisions, ultimately enhancing patient care outcomes and hospital resource utilization.
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />

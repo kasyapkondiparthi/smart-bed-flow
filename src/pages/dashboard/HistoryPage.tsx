@@ -1,16 +1,9 @@
 import { useState } from "react";
 import { usePatients } from "@/context/PatientContext";
 import { 
-  History, 
-  Calendar, 
-  Clock, 
-  User, 
-  CheckCircle2, 
-  RefreshCcw, 
-  Trash2,
   Search,
-  FilterX,
-  FileDown
+  Clock,
+  X,
 } from "lucide-react";
 import { 
   Table, 
@@ -36,16 +29,17 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import { format, isSameDay, formatDistanceToNow, parseISO } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 const HistoryPage = () => {
   const { history, refreshHistory, loading } = usePatients();
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [timeSlot, setTimeSlot] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [tick, setTick] = useState<number>(0);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Force re-render every minute to update "Time Ago" labels
   useEffect(() => {
@@ -61,8 +55,9 @@ const HistoryPage = () => {
   };
 
   const filteredHistory = history.filter((entry) => {
-    const dateMatch = selectedDate 
-      ? isSameDay(new Date(entry.timestamp), new Date(selectedDate)) 
+    const entryDate = new Date(entry.timestamp).toLocaleDateString();
+    const dateMatch = selectedDate
+      ? entryDate === selectedDate.toLocaleDateString()
       : true;
     
     const slotMatch = timeSlot === "All" 
@@ -73,24 +68,6 @@ const HistoryPage = () => {
 
     return dateMatch && slotMatch && searchMatch;
   });
-
-  const getActionIcon = (type: string) => {
-    switch (type) {
-      case "Added": return <CheckCircle2 className="w-3 h-3" />;
-      case "Updated": return <RefreshCcw className="w-3 h-3" />;
-      case "Removed": return <Trash2 className="w-3 h-3" />;
-      default: return null;
-    }
-  };
-
-  const getActionColor = (type: string) => {
-    switch (type) {
-      case "Added": return "bg-green-500/10 text-green-400 border-green-500/20";
-      case "Updated": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-      case "Removed": return "bg-red-500/10 text-red-500 border-red-500/20";
-      default: return "bg-slate-500/10 text-slate-400 border-slate-500/20";
-    }
-  };
 
   const exportHistory = () => {
     if (filteredHistory.length === 0) {
@@ -144,188 +121,188 @@ const HistoryPage = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-primary to-purple-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">Patient History</h1>
-          <p className="text-sm text-slate-400 mt-1 font-medium font-mono uppercase tracking-wider">Audit trail of all hospital bed allocations and triage events</p>
+      {/* Professional Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 text-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl shadow-blue-500/20 border border-white/10 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-500/20 transition-all duration-1000" />
+        <div className="relative z-10">
+          <h1 className="text-4xl font-black tracking-tighter mb-2 border-b-4 border-white/30 pb-2 inline-block">Shift Audit Logs</h1>
+          <p className="text-blue-100/90 text-sm font-bold mt-2 max-w-md leading-relaxed">
+            Comprehensive historical registry of <span className="text-emerald-300">all clinical admissions</span> and resource lifecycle events.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 relative z-10">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => refreshHistory()}
             disabled={loading}
-            className="bg-white/5 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl gap-2"
+            className="h-11 px-8 bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-2xl font-black uppercase tracking-widest text-[11px] backdrop-blur-md shadow-inner transition-all active:scale-95"
           >
-            <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Refresh Logs</span>
+            {loading ? "Refreshing..." : "Re-Sync Logs"}
           </Button>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.15)]">
-             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,1)]" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-green-400">Live</span>
+          <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
+             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+             <span className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-300">Neural Feed</span>
           </div>
         </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="glass-panel p-6 flex flex-col lg:flex-row items-center gap-4">
+      <div className="glass-panel p-8 mb-8 flex flex-col lg:flex-row items-center gap-6 border-l-4 border-l-primary">
         <div className="relative flex-1 group w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+            <Search className="w-5 h-5" />
+          </div>
           <Input 
-            placeholder="Search by patient name..." 
+            placeholder="Search patient trace identity..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-black/40 border-slate-700/50 text-white focus:ring-primary focus:border-primary h-10 rounded-xl"
+            className="bg-muted/30 dark:bg-gray-900 border-border dark:border-gray-700 text-foreground focus:ring-2 focus:ring-primary/40 h-14 pl-12 rounded-2xl transition-all font-bold placeholder:text-muted-foreground/50"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-          <div className="flex-1 min-w-[200px] lg:w-64">
-            <Popover>
+          <div className="flex-1 min-w-[220px] lg:w-72">
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal bg-black/40 border-slate-700/50 text-white rounded-xl h-12 hover:bg-white/5 px-4 transition-all",
-                    !selectedDate && "text-slate-500"
+                    "w-full justify-between text-left font-black bg-muted/30 dark:bg-gray-900 border-border dark:border-white/10 text-foreground rounded-2xl h-14 hover:bg-muted/50 transition-all px-5 shadow-sm group",
+                    !selectedDate && "text-muted-foreground/50"
                   )}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(parseISO(selectedDate), "PPP") : <span className="text-sm font-medium">Filter by Date</span>}
+                  <span className="truncate">
+                    {selectedDate 
+                      ? format(selectedDate, "PPP") 
+                      : <span className="text-[10px] uppercase tracking-[0.2em]">Select Trace Date</span>
+                    }
+                  </span>
+                  {selectedDate && (
+                    <X 
+                      className="w-4 h-4 ml-2 hover:text-primary transition-colors cursor-pointer" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedDate(undefined);
+                      }}
+                    />
+                  )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200" align="start">
+              <PopoverContent className="w-auto p-0 bg-card dark:bg-slate-900 border-border dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200" align="start">
+                <div className="p-3 border-b border-border flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filter by date</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-3 text-[10px] font-black uppercase tracking-widest"
+                    onClick={() => {
+                      setSelectedDate(new Date());
+                      setIsCalendarOpen(false);
+                    }}
+                  >
+                    Today
+                  </Button>
+                </div>
                 <CalendarPicker
                   mode="single"
-                  selected={selectedDate ? parseISO(selectedDate) : undefined}
-                  onSelect={(date) => setSelectedDate(date ? date.toISOString().split('T')[0] : "")}
-                  initialFocus
-                  className="p-6 bg-slate-900"
-                  classNames={{
-                    month: "space-y-6",
-                    caption: "flex justify-center pt-2 relative items-center mb-4",
-                    caption_label: "text-lg font-black text-white uppercase tracking-widest",
-                    nav: "space-x-2 flex items-center",
-                    nav_button: "h-9 w-9 bg-white/5 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition-all rounded-lg",
-                    table: "w-full border-collapse space-y-2",
-                    head_row: "flex mb-2",
-                    head_cell: "text-slate-500 rounded-md w-11 font-black text-[10px] uppercase tracking-widest",
-                    row: "flex w-full mt-2",
-                    cell: "h-11 w-11 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                    day: "h-11 w-11 p-0 font-bold text-slate-300 hover:bg-primary/20 hover:text-primary transition-all rounded-lg flex items-center justify-center",
-                    day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]",
-                    day_today: "bg-white/5 text-primary border border-primary/20",
-                    day_outside: "text-slate-700 opacity-50",
-                    day_disabled: "text-slate-800 opacity-50",
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    setSelectedDate(date);
+                    if (date) setIsCalendarOpen(false);
                   }}
+                  initialFocus
+                  className="p-6 bg-transparent text-foreground"
                 />
               </PopoverContent>
             </Popover>
           </div>
 
           <Select value={timeSlot} onValueChange={setTimeSlot}>
-            <SelectTrigger className="w-full md:w-40 bg-black/40 border-slate-700/50 text-white rounded-xl h-12">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-slate-500" />
-                <SelectValue placeholder="Time Slot" />
-              </div>
+            <SelectTrigger className="w-full md:w-44 bg-muted/30 dark:bg-gray-900 border-border dark:border-gray-700 text-foreground font-black uppercase tracking-widest text-[10px] rounded-2xl h-14 focus:ring-2 focus:ring-primary/40 transition-all">
+              <SelectValue placeholder="Time Slot" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-white/10 text-white">
-              <SelectItem value="All">All Slots</SelectItem>
-              <SelectItem value="Morning">Morning (00-12)</SelectItem>
-              <SelectItem value="Evening">Evening (12-24)</SelectItem>
+            <SelectContent className="bg-card dark:bg-slate-900 border-border dark:border-white/10 text-foreground rounded-2xl">
+              <SelectItem value="All" className="font-bold uppercase tracking-widest text-[10px]">All Slots</SelectItem>
+              <SelectItem value="Morning" className="font-bold uppercase tracking-widest text-[10px]">Morning (AM)</SelectItem>
+              <SelectItem value="Evening" className="font-bold uppercase tracking-widest text-[10px]">Evening (PM)</SelectItem>
             </SelectContent>
           </Select>
 
-          {(selectedDate || timeSlot !== "All" || searchTerm) && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => { setSelectedDate(""); setTimeSlot("All"); setSearchTerm(""); }}
-              className="text-slate-500 hover:text-white"
-              title="Clear Filters"
-            >
-              <FilterX className="w-5 h-5" />
-            </Button>
-          )}
-
-          <div className="h-10 w-[1px] bg-white/10 hidden lg:block mx-2" />
-
           <Button 
             onClick={exportHistory}
-            className="w-full lg:w-auto bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px] h-12 px-6 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)] group transition-all"
+            className="w-full lg:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-[0.2em] text-[10px] h-14 px-8 rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center gap-2"
           >
-            <FileDown className="w-4 h-4 mr-2 group-hover:translate-y-0.5 transition-transform" />
-            Export History
+            Audit Export
           </Button>
         </div>
       </div>
 
       {/* History Registry */}
-      <div className="glass-panel overflow-hidden">
+      <div className="glass-panel overflow-hidden border-t-4 border-t-emerald-500">
         {filteredHistory.length === 0 ? (
-          <div className="text-center py-24">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
-              <History className="w-8 h-8 text-slate-600" />
+          <div className="text-center py-32 opacity-40 flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center mb-6">
+              <Clock className="w-8 h-8 text-muted-foreground" />
             </div>
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">No history records found matching the filters</p>
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em] font-mono italic">Trace ID Log Empty</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-black/40">
-                <TableRow className="hover:bg-transparent border-b border-white/5 text-slate-400">
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest">Patient Details</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest">Event Type</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest">Severity</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest">Allocation</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-right">Time & Date</TableHead>
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent border-b border-border transition-none">
+                  <TableHead className="font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 pl-10 h-20">Patient Trace Identity</TableHead>
+                  <TableHead className="font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 h-20">Event Vector</TableHead>
+                  <TableHead className="font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 h-20">Acuity Status</TableHead>
+                  <TableHead className="font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 h-20">Resource Target</TableHead>
+                  <TableHead className="font-black text-[11px] uppercase tracking-[0.2em] text-foreground/60 text-right pr-10 h-20">Temporal Metadata</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredHistory.map((entry) => (
-                  <TableRow key={entry.id} className="hover:bg-white/5 border-white/5 transition-colors group">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-                          <User className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-white">{entry.name}</p>
-                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">ID: {entry.id}</p>
-                        </div>
+                  <TableRow key={entry.id} className="hover:bg-muted/30 dark:hover:bg-muted/10 border-border transition-colors group h-24">
+                    <TableCell className="pl-10">
+                      <div>
+                        <p className="font-extrabold text-sm text-foreground group-hover:text-primary transition-colors leading-tight mb-0.5">{entry.name}</p>
+                        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.1em] opacity-60">ID: {entry.id.slice(0, 12)} • Clinical-Trace</p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest border ${getActionColor(entry.actionType)}`}>
-                        {getActionIcon(entry.actionType)}
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] shadow-sm border ${
+                        entry.actionType === 'Added' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' :
+                        entry.actionType === 'Updated' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]' :
+                        'bg-rose-500/10 text-rose-600 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'
+                      }`}>
                         {entry.actionType}
                       </span>
                     </TableCell>
                     <TableCell>
-                       <span className={`text-[10px] font-black uppercase tracking-widest ${
-                         entry.severity === 'Critical' ? 'text-red-500' : 
-                         entry.severity === 'Moderate' ? 'text-yellow-500' : 'text-green-500'
+                       <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-3 py-1.5 rounded-lg border shadow-sm ${
+                         entry.severity === 'Critical' ? 'bg-rose-500 text-white border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]' : 
+                         entry.severity === 'Moderate' ? 'bg-amber-500 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 
+                         'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                        }`}>
                          {entry.severity}
                        </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-300">{entry.assignedBed}</span>
+                        <span className="text-xs font-black text-foreground uppercase tracking-tight">{entry.assignedBed}</span>
                         {entry.bedNumber && (
-                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{entry.bedNumber} (FLR {entry.floorNumber})</span>
+                           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">
+                             <span className="text-primary">BED {entry.bedNumber}</span> • FLOOR {entry.floorNumber}
+                           </p>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-10">
                       <div className="flex flex-col items-end">
-                        <span className="text-sm font-mono font-bold text-slate-300">
+                        <span className="text-xs font-black text-primary italic tracking-tight">
                           {formatDistanceToNow(new Date(entry.timestamp), { addSuffix: true })}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          {format(new Date(entry.timestamp), "HH:mm:ss")} • {format(new Date(entry.timestamp), "MMM dd")}
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-70">
+                          {format(new Date(entry.timestamp), "HH:mm")} • {format(new Date(entry.timestamp), "MMM dd, yyyy")}
                         </span>
                       </div>
                     </TableCell>

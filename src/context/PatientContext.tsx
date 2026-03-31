@@ -16,6 +16,7 @@ export interface HistoryEntry {
   assignedBed: string;
   bedNumber: string | null;
   floorNumber: number | null;
+  status?: string;
   actionType: "Added" | "Updated" | "Removed";
   timestamp: string;
 }
@@ -30,10 +31,13 @@ interface PatientContextType {
   waitingCount: number;
   icuAvailable: number;
   normalAvailable: number;
-  fetchPatientsList: () => Promise<void>;
+  fetchPatientsList: (manual?: boolean) => Promise<void>;
   refreshHistory: () => Promise<void>;
   handleAllocate: (input: PatientInput) => Promise<void>;
   handleUpdatePatient: (id: string, input: PatientInput) => Promise<void>;
+  handleApprove: (id: string) => Promise<void>;
+  handleReject: (id: string) => Promise<void>;
+  handleManualReallocation: () => Promise<void>;
   handleRemovePatient: (id: string) => Promise<void>;
   handleReset: () => Promise<void>;
 }
@@ -49,93 +53,7 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const fetchPatientsList = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("patients")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load patients");
-    } else {
-      setPatients(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (data || []).map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          severity: p.severity,
-          needsICU: p.needs_icu,
-          assignedBed: p.assigned_bed,
-          bedNumber: p.bed_number,
-          floorNumber: p.floor_number,
-          oxygenLevel: p.oxygen_level,
-          heartRate: p.heart_rate,
-          createdAt: p.created_at,
-        }))
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPatientsList().then(() => setInitialLoading(false));
-
-    const channel = supabase
-      .channel("patients-all")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "patients" },
-        () => {
-          fetchPatientsList();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchPatientsList]);
-
-  const logHistory = useCallback((patient: any, actionType: "Added" | "Updated" | "Removed", customTimestamp?: string) => {
-    const entry: HistoryEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      patientId: patient.id || patient.patientId,
-      name: patient.name,
-      severity: patient.severity,
-      needsICU: patient.needs_icu || patient.needsICU,
-      assignedBed: patient.assigned_bed || patient.assignedBed,
-      bedNumber: patient.bed_number || patient.bedNumber,
-      floorNumber: patient.floor_number || patient.floorNumber,
-      actionType,
-      timestamp: customTimestamp || new Date().toISOString(),
-    };
-    setHistory((prev) => {
-      const updated = [entry, ...prev];
-      localStorage.setItem("hospital_history", JSON.stringify(updated.slice(0, 100))); // Persist last 100 entries
-      return updated;
-    });
-  }, []);
-
-  // Backfill: Add existing patients from DB to history if not present
-  useEffect(() => {
-    if (!initialLoading && patients.length > 0) {
-      const existingIds = new Set(history.map(h => h.patientId).filter(Boolean));
-      const missingPatients = patients.filter(p => !existingIds.has(p.id));
-
-      if (missingPatients.length > 0) {
-        missingPatients.forEach(p => {
-          logHistory(p, "Added", p.createdAt);
-        });
-      }
-    }
-  }, [initialLoading, patients, history, logHistory]);
-
-  const icuUsed = patients.filter((p) => p.assignedBed === "ICU").length;
-  const normalUsed = patients.filter((p) => p.assignedBed === "Normal").length;
-  const waitingCount = patients.filter((p) => p.assignedBed === "Waiting").length;
-  const icuAvailable = ICU_TOTAL - icuUsed;
-  const normalAvailable = NORMAL_TOTAL - normalUsed;
-
-  const runGlobalReallocation = async () => {
+  const runGlobalReallocation = useCallback(async () => {
     const { data: allPatients } = await supabase.from("patients").select("*").order("created_at", { ascending: true });
     const currentPatients = allPatients || [];
 
@@ -151,7 +69,7 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
 
     const severityMap: Record<string, number> = { Critical: 0, Moderate: 1, Low: 2 };
     const waitlist = currentPatients
-      .filter((p: any) => p.assigned_bed === "Waiting")
+      .filter((p: any) => p.assigned_bed === "Waiting" && (p.status === "Confirmed" || p.severity === "Critical"))
       .sort((a: any, b: any) => {
         if (severityMap[a.severity] !== severityMap[b.severity]) {
           return severityMap[a.severity] - severityMap[b.severity];
@@ -210,7 +128,113 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
     if (updatesTemp.length > 0) {
       await Promise.all(updatesTemp);
     }
-  };
+  }, []);
+
+  const fetchPatientsList = useCallback(async (manual = false) => {
+    // Only show loading if manual refresh to avoid interrupting realtime updates
+    if (manual === true) setLoading(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from("patients")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast.error("Failed to load patients");
+      } else {
+        setPatients(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (data || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            severity: p.severity,
+            needsICU: p.needs_icu,
+            assignedBed: p.assigned_bed,
+            bedNumber: p.bed_number,
+            floorNumber: p.floor_number,
+            oxygenLevel: p.oxygen_level,
+            heartRate: p.heart_rate,
+            createdAt: p.created_at,
+            status: p.status,
+          }))
+        );
+
+        if (manual === true) {
+          // Trigger reallocation check as well to ensure total system consistency
+          await runGlobalReallocation();
+          toast.success("Patient registry updated", {
+            description: "Data synchronized and allocations re-evaluated."
+          });
+        }
+      }
+    } finally {
+      if (manual === true) setLoading(false);
+    }
+  }, [runGlobalReallocation]);
+
+  useEffect(() => {
+    fetchPatientsList().then(() => setInitialLoading(false));
+
+    const channel = supabase
+      .channel("patients-all")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "patients" },
+        async (payload) => {
+          await fetchPatientsList();
+          // If a new patient and it's 'Waiting', trigger reallocation
+          if (payload.eventType === "INSERT" && payload.new.assigned_bed === "Waiting") {
+            runGlobalReallocation();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchPatientsList, runGlobalReallocation]);
+
+  const logHistory = useCallback((patient: any, actionType: "Added" | "Updated" | "Removed", customTimestamp?: string) => {
+    const entry: HistoryEntry = {
+      id: Math.random().toString(36).substr(2, 9),
+      patientId: patient.id || patient.patientId,
+      name: patient.name,
+      severity: patient.severity,
+      needsICU: patient.needs_icu || patient.needsICU,
+      assignedBed: patient.assigned_bed || patient.assignedBed,
+      bedNumber: patient.bed_number || patient.bedNumber,
+      floorNumber: patient.floor_number || patient.floorNumber,
+      actionType,
+      timestamp: customTimestamp || new Date().toISOString(),
+    };
+    setHistory((prev) => {
+      const updated = [entry, ...prev];
+      localStorage.setItem("hospital_history", JSON.stringify(updated.slice(0, 100))); // Persist last 100 entries
+      return updated;
+    });
+  }, []);
+
+  // Backfill: Add existing patients from DB to history if not present
+  useEffect(() => {
+    if (!initialLoading && patients.length > 0) {
+      const existingIds = new Set(history.map(h => h.patientId).filter(Boolean));
+      const missingPatients = patients.filter(p => !existingIds.has(p.id));
+
+      if (missingPatients.length > 0) {
+        missingPatients.forEach(p => {
+          logHistory(p, "Added", p.createdAt);
+        });
+      }
+    }
+  }, [initialLoading, patients, history, logHistory]);
+
+  const icuUsed = patients.filter((p) => p.assignedBed === "ICU").length;
+  const normalUsed = patients.filter((p) => p.assignedBed === "Normal").length;
+  const waitingCount = patients.filter((p) => p.assignedBed === "Waiting").length;
+  const icuAvailable = ICU_TOTAL - icuUsed;
+  const normalAvailable = NORMAL_TOTAL - normalUsed;
 
   const handleAllocate = useCallback(async (input: PatientInput) => {
     setLoading(true);
@@ -227,6 +251,7 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
         assigned_bed: "Waiting",
         oxygen_level: input.oxygenLevel,
         heart_rate: input.heartRate,
+        status: input.severity === "Critical" ? "Confirmed" : "Waiting"
       }).select().single();
 
       if (insertError) throw insertError;
@@ -282,6 +307,67 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
       setLoading(false);
     }
   }, [fetchPatientsList, logHistory]);
+
+  const handleApprove = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("patients").update({ 
+        status: "Confirmed" 
+      } as any).eq("id", id);
+      if (error) throw error;
+
+      await runGlobalReallocation();
+      await fetchPatientsList();
+      toast.success("Patient admission approved");
+    } catch {
+      toast.error("Approval failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPatientsList, runGlobalReallocation]);
+
+  const handleReject = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("patients").delete().eq("id", id);
+      if (error) throw error;
+      await fetchPatientsList();
+      toast.success("Patient application rejected");
+    } catch {
+      toast.error("Rejection failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPatientsList]);
+
+  const handleManualReallocation = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: allPatients } = await supabase.from("patients").select("*");
+      const waitingPatients = (allPatients || []).filter((p: any) => p.status === "Waiting");
+
+      if (waitingPatients.length === 0) {
+        toast.info("No patients in waiting list");
+        return;
+      }
+
+      // Bulk update Status to Confirmed to allow bed allocation
+      const { error } = await supabase
+        .from("patients")
+        .update({ status: "Confirmed" } as any)
+        .in("id", waitingPatients.map(p => p.id));
+
+      if (error) throw error;
+
+      await runGlobalReallocation();
+      await fetchPatientsList();
+      toast.success(`Manual allocation processed for ${waitingPatients.length} patients`);
+    } catch (err: unknown) {
+      toast.error("Manual allocation failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPatientsList, runGlobalReallocation]);
 
   const handleRemovePatient = useCallback(async (id: string) => {
     setLoading(true);
@@ -394,6 +480,9 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
       refreshHistory,
       handleAllocate,
       handleUpdatePatient,
+      handleApprove,
+      handleReject,
+      handleManualReallocation,
       handleRemovePatient,
       handleReset
     }}>

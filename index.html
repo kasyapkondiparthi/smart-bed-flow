@@ -1,7 +1,21 @@
 <!doctype html>
-<html lang="en" class="dark">
-
+<html lang="en">
 <head>
+  <script>
+    (function() {
+      try {
+        const theme = localStorage.getItem("theme") || "system";
+        if (theme === "dark") {
+          document.documentElement.classList.add("dark");
+        } else if (theme === "light") {
+          document.documentElement.classList.remove("dark");
+        } else {
+          const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (isDark) document.documentElement.classList.add("dark");
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smart Hospital Bed Allocation System</title>

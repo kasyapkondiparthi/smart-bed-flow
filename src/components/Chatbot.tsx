@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageSquare, X, Send, Bot, User, Mic, MicOff, Volume2, VolumeX, Sparkles, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePatients } from "@/context/PatientContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PatientInput } from "./PatientForm";
 
@@ -39,6 +40,7 @@ const Chatbot = () => {
   const {
     handleAllocate,
     handleReset,
+    fetchPatientsList,
     icuAvailable,
     normalAvailable,
     patients,
@@ -102,43 +104,66 @@ const Chatbot = () => {
 
   const parseCommand = (text: string) => {
     const lower = text.toLowerCase();
-    
-    // Check for "same" contextual command
-    if (lower.includes("same") && lastPatient) {
-      return { type: "add", payload: { ...lastPatient } };
-    }
 
-    const severity = lower.includes("critical") 
-      ? "Critical" 
-      : lower.includes("moderate") 
-        ? "Moderate" 
-        : "Low";
-        
-    const needsICU = lower.includes("icu");
-
-    // Smart name extraction: try after keywords first, fallback to capitalized word
+    // extract name
     const nameAfterKeyword = text.match(/(?:patient|named|add|admit)\s+([A-Z][a-z]+)/i);
     const capitalizedWord = text.match(/\b([A-Z][a-z]{1,}(?!cu))\b/);
-    const name = nameAfterKeyword
+    const extractedName = nameAfterKeyword
       ? nameAfterKeyword[1]
       : capitalizedWord
       ? capitalizedWord[1]
-      : text.split(" ").find(w => w.length > 2 && !['add','the','icu','critical','moderate','patient','named','show','how','many','reset','system'].includes(w.toLowerCase())) || "Unknown";
+      : text.split(" ").find(w => w.length > 2 && !['add', 'the', 'icu', 'critical', 'moderate', 'patient', 'named', 'show', 'how', 'many', 'reset', 'system'].includes(w.toLowerCase())) || "Ram";
 
-    if (lower.includes("add") || lower.includes("admit") || lower.includes("new patient")) {
-      return { type: "add", payload: { name, severity, needsICU } };
+    if (lower.includes("add") || lower.includes("admit") || lower.includes("new patient") || lower.includes("assign")) {
+      return {
+        type: "add_patient",
+        data: {
+          name: extractedName,
+          severity: lower.includes("critical") ? "Critical" : lower.includes("moderate") ? "Moderate" : "Low",
+          needsICU: lower.includes("icu"),
+        },
+      };
     }
-    // Detect "patient <Name>" pattern as an add intent
-    if (lower.includes("patient") && !lower.includes("waiting") && !lower.includes("how")) {
-      return { type: "add", payload: { name, severity, needsICU } };
+
+    if (lower.includes("stats") || lower.includes("how many") || lower.includes("summary") || lower.includes("status") || lower.includes("beds") || lower.includes("occupancy")) {
+      return { type: "get_stats" };
     }
-    
-    if (lower.includes("reset")) return { type: "reset" };
-    if (lower.includes("stats") || lower.includes("summary") || lower.includes("status")) return { type: "stats" };
-    if (lower.includes("icu")) return { type: "icu" };
-    if (lower.includes("waiting") || lower.includes("how many")) return { type: "waiting" };
-    
-    return { type: "chat" };
+
+    if (lower.includes("reset") || lower.includes("clear") || lower.includes("restart")) {
+      return { type: "reset" };
+    }
+
+    return { type: "unknown" };
+  };
+
+  const handleAction = async (action: any) => {
+    switch (action.type) {
+      case "add_patient":
+        const { error: addError } = await supabase.from("patients").insert([{
+          name: action.data.name,
+          severity: action.data.severity,
+          needs_icu: action.data.needsICU,
+          assigned_bed: "Waiting"
+        }]);
+        if (addError) throw addError;
+        return { message: "Patient added successfully" };
+
+      case "get_stats":
+        const { data } = await supabase.from("patients").select("*");
+        return {
+          total: data?.length || 0,
+          critical: data?.filter((p: any) => p.severity === "Critical").length || 0,
+          waiting: data?.filter((p: any) => p.assigned_bed === "Waiting").length || 0,
+        };
+
+      case "reset":
+        const { error: resetError } = await supabase.from("patients").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        if (resetError) throw resetError;
+        return { message: "System reset successfully" };
+
+      default:
+        return { message: "Unknown action" };
+    }
   };
 
   const replies = {
@@ -159,10 +184,36 @@ const Chatbot = () => {
     await processInput(voiceInput);
   };
 
+  const sendToAI = async (messages: { role: string; content: string }[]) => {
+    try {
+      const res = await fetch("http://localhost:5050/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages }),
+      });
+
+      if (!res.ok) throw new Error("AI Proxy unreachable");
+      const data = await res.json();
+      return {
+        content: data.choices?.[0]?.message?.content || "I am processing your request...",
+        actionExecuted: data.actionExecuted,
+        actionError: data.actionError
+      };
+    } catch (err) {
+      console.error("AI Error:", err);
+      return {
+        content: "System Error: Neural link offline. Please try again later.",
+        actionExecuted: false,
+        actionError: (err as Error).message
+      };
+    }
+  };
+
   const processInput = async (text: string) => {
     const userMessage = text.trim();
-    
-    // Add user message to UI
+    if (!userMessage) return;
+
+    // 1. Add user message to UI and History
     const newUserMsg: ChatMessage = { id: Date.now().toString(), role: "user", text: userMessage };
     setMessages((prev) => [...prev, newUserMsg]);
     setIsTyping(true);
@@ -176,52 +227,77 @@ const Chatbot = () => {
       isAnalyzing: true
     }]);
 
-    // Simulated Thinking Delay
-    setTimeout(async () => {
-      const command = parseCommand(userMessage);
-      let reply = "";
-      
-      switch (command.type) {
-        case "add":
-          if (command.payload) {
-            const { name, severity, needsICU } = command.payload;
-            await handleAllocate({
-              name,
-              severity: severity as any,
-              needsICU,
-              oxygenLevel: undefined,
-              heartRate: undefined,
-            });
-            setLastPatient({ name, severity: severity as any, needsICU, oxygenLevel: undefined, heartRate: undefined });
-            reply = replies.add(command.payload);
-          }
-          break;
-        case "reset":
-          await handleReset();
-          reply = replies.reset();
-          break;
-        case "icu":
-          const icuUsedCount = patients.filter(p => p.assignedBed === "ICU").length;
-          reply = replies.icu({ icuAvailable, icuUsed: icuUsedCount });
-          break;
-        case "waiting":
-          const waitingCount = patients.filter(p => p.assignedBed === "Waiting").length;
-          reply = replies.waiting({ waiting: waitingCount });
-          break;
-        case "stats":
-          const wCount = patients.filter(p => p.assignedBed === "Waiting").length;
-          reply = replies.stats({ icuAvailable, normalAvailable, total: patients.length, waiting: wCount });
-          break;
-        default:
-          reply = replies.unknown();
-      }
+    // 2. Perform direct system action if matched
+    const command = parseCommand(userMessage);
+    let aiReply = "";
+    let actionExecuted = false;
+    let actionError = null;
 
-      setIsTyping(false);
-      setMessages((prev) => prev.map(m => 
-        m.id === analysisId ? { ...m, text: reply, isAnalyzing: false } : m
-      ));
-      speak(reply);
-    }, 1500);
+    if (command.type !== "unknown") {
+      try {
+        const result: any = await handleAction(command);
+        actionExecuted = true;
+        
+        if (command.type === "add_patient") {
+          aiReply = `✅ Patient ${command.data.name} added successfully to the neural queue.`;
+        } else if (command.type === "get_stats") {
+          aiReply = `📊 Live System Stats:\n• Total: ${result.total}\n• Critical: ${result.critical}\n• Waiting: ${result.waiting}`;
+        } else if (command.type === "reset") {
+          aiReply = result.message;
+        }
+
+        // Refresh UI state
+        await fetchPatientsList();
+      } catch (err: any) {
+        actionError = err.message;
+        aiReply = `❌ System Error: ${err.message}`;
+      }
+    } else {
+      // 3. Fallback to AI for general conversation
+      const history = messages.map(m => ({
+        role: m.role,
+        content: m.text
+      }));
+      history.push({ role: "user", content: userMessage });
+
+      const wCount = patients.filter(p => p.assignedBed === "Waiting").length;
+      const systemPrompt = `You are the Neural AI System Controller for the Smart Hospital.
+Current Hospital State:
+• ICU Available: ${icuAvailable}
+• Ward Available: ${normalAvailable} 
+• Total Patients: ${patients.length}
+• Waiting Queue: ${wCount}
+
+You can summarize data or chat. For real operations, the system already handled structured commands. Use natural language to complement the experience.`;
+
+      const aiResponse = await sendToAI([
+        { role: "system", content: systemPrompt },
+        ...history
+      ]);
+      aiReply = aiResponse.content;
+      actionExecuted = aiResponse.actionExecuted;
+      actionError = aiResponse.actionError;
+    }
+
+    setIsTyping(false);
+    
+    // Update UI with the final reply
+    setMessages((prev) => prev.map(m => 
+      m.id === analysisId ? { ...m, text: aiReply, isAnalyzing: false } : m
+    ));
+
+    if (actionExecuted) {
+      toast.success("AI System Action Executed", {
+        description: "The hospital database has been updated.",
+        icon: <Activity className="w-4 h-4 text-primary" />,
+      });
+    } else if (actionError) {
+      toast.error("AI System Action Failed", {
+        description: actionError,
+      });
+    }
+
+    speak(aiReply);
   };
 
   const handleSend = async (e: React.FormEvent) => {

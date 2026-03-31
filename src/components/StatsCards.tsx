@@ -76,28 +76,28 @@ const StatsCards = ({ icuAvailable, icuTotal, normalAvailable, normalTotal, wait
                 <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
               </div>
               {stat.badge && (
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                  stat.badge === 'full' ? 'bg-destructive text-destructive-foreground' :
-                  stat.badge === 'warning' ? 'bg-yellow-500 text-white' :
-                  stat.badge === 'waiting' ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
+                <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-lg shadow-sm border ${
+                  stat.badge === 'full' ? 'bg-rose-500 text-white border-rose-400' :
+                  stat.badge === 'warning' ? 'bg-amber-500 text-white border-amber-400' :
+                  stat.badge === 'waiting' ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-emerald-600 text-white border-emerald-400'
                 }`}>
-                  {stat.badge === "available" ? "Available" : stat.badge === "full" ? "Full" : stat.badge === "warning" ? "High Usage" : "Waiting"}
+                  {stat.badge === "available" ? "Status: Nominal" : stat.badge === "full" ? "Status: Critical" : stat.badge === "warning" ? "Status: Warning" : "Status: Waiting"}
                 </span>
               )}
             </div>
             
             <div className="flex items-baseline gap-2">
-              <div className="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] tracking-tight">
+              <div className="text-5xl font-black text-foreground drop-shadow-md dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-tighter">
                 {stat.value}{stat.suffix}
               </div>
               {stat.percentage !== undefined && (
-                <div className="text-xs font-bold text-slate-400">
+                <div className="text-xs font-bold text-muted-foreground">
                   ({stat.percentage}%)
                 </div>
               )}
             </div>
 
-            <p className="text-xs text-slate-500 mt-2 font-medium uppercase tracking-wider">
+            <p className="text-xs text-muted-foreground mt-2 font-medium uppercase tracking-wider">
               {stat.label}
               {stat.total !== undefined && (
                 <span className="text-[10px] ml-1 opacity-70"> / {stat.total} total</span>

@@ -21,6 +21,8 @@ const Overview = () => {
     history
   } = usePatients();
 
+  const icuUsagePercent = Math.round((icuUsed / ICU_TOTAL) * 100);
+
   if (initialLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
@@ -41,47 +43,52 @@ const Overview = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-primary to-purple-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">Command Center</h1>
-          <p className="text-sm text-slate-400 mt-1 font-medium font-mono uppercase tracking-wider">Real-time hospital monitoring & smart allocation</p>
+      {/* Professional Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 text-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl shadow-blue-500/20 border border-white/10 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-500/20 transition-all duration-1000" />
+        <div className="relative z-10">
+          <h1 className="text-4xl font-black tracking-tighter mb-2 border-b-4 border-white/30 pb-2 inline-block">Command Center</h1>
+          <p className="text-blue-100/90 text-sm font-bold mt-2 max-w-md leading-relaxed">
+            Real-time occupancy monitoring and <span className="text-emerald-300">predictive neural allocation</span> for critical care environments.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pink-500/10 border border-pink-500/20 shadow-[0_0_15px_rgba(236,72,153,0.15)]">
-            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse shadow-[0_0_8px_rgba(236,72,153,1)]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-pink-400">Live Telemetry</span>
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-inner">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-300">Neurolink Live</span>
           </div>
         </div>
       </div>
 
-      {/* Smart Alerts */}
+      {/* Smart Alerts Section */}
       <div className="animate-in fade-in slide-in-from-top-4 duration-500">
         {icuAvailable === 0 ? (
-          <Alert variant="destructive" className="border border-destructive/50 bg-destructive/10 shadow-[0_0_20px_rgba(239,68,68,0.3)] backdrop-blur-md">
-            <AlertCircle className="h-5 w-5 text-destructive drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-            <AlertTitle className="text-lg font-bold text-destructive drop-shadow-md">ICU FULL – CRITICAL CONDITION</AlertTitle>
-            <AlertDescription className="text-slate-300 font-medium">
-              System capacity exhausted. New critical patients will be placed on the prioritized waitlist immediately.
+          <Alert variant="destructive" className="border-red-500/50 bg-red-500/5 backdrop-blur-md shadow-2xl rounded-2xl border-l-8">
+            <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+            <AlertTitle className="text-xl font-black text-red-600 dark:text-red-400 uppercase tracking-tighter italic mb-1">CRITICAL: ICU CAPACITY EXHAUSTED</AlertTitle>
+            <AlertDescription className="text-gray-800 dark:text-gray-200 font-bold text-sm leading-relaxed">
+              Immediate triage redirect active. All new high-acuity cases are being buffered in the priority waiting registry. <span className="underline decoration-red-500/50 underline-offset-4">Emergency resource reallocation required.</span>
             </AlertDescription>
           </Alert>
         ) : icuUsed / ICU_TOTAL > 0.8 ? (
-          <Alert className="border border-yellow-500/50 bg-yellow-500/10 shadow-[0_0_20px_rgba(234,179,8,0.2)] backdrop-blur-md transition-all">
-            <AlertTriangle className="h-5 w-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
-            <AlertTitle className="text-lg font-bold text-yellow-500 drop-shadow-md tracking-wider uppercase">ICU Usage Warning</AlertTitle>
-            <AlertDescription className="text-slate-300 font-medium">
-              ICU capacity is over 80%. Consider triage protocols and discharging stable patients.
+          <Alert className="border-amber-500/50 bg-amber-500/5 backdrop-blur-md shadow-xl rounded-2xl border-l-8">
+            <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            <AlertTitle className="text-xl font-black text-amber-600 dark:text-amber-400 uppercase tracking-tighter italic mb-1">High Occupancy Threshold</AlertTitle>
+            <AlertDescription className="text-gray-800 dark:text-gray-200 font-bold text-sm leading-relaxed">
+              ICU telemetry indicates <span className="text-amber-600 dark:text-amber-400">{icuUsagePercent}% load</span>. Pre-emptive discharge screening for stable patients is highly recommended.
             </AlertDescription>
           </Alert>
         ) : (
-          <Alert className="border border-green-500/30 bg-green-500/5 shadow-[0_0_15px_rgba(34,197,94,0.1)] backdrop-blur-md transition-all">
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,1)]" />
-              <AlertTitle className="text-sm font-bold m-0 leading-none text-green-400 drop-shadow-sm uppercase tracking-widest">Neural System Stable</AlertTitle>
-            </div>
-            <AlertDescription className="text-xs text-slate-500 font-bold uppercase tracking-tighter">
-              Sufficient beds available. Predictive allocation active for incoming triage.
-            </AlertDescription>
+          <Alert className="border-emerald-500/20 bg-emerald-500/5 backdrop-blur-md shadow-sm rounded-2xl py-4">
+             <div className="flex items-center gap-3">
+               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+               <div>
+                 <AlertTitle className="text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] m-0">Neural Core Operating Nominal</AlertTitle>
+                 <AlertDescription className="text-[11px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+                   Sufficient capacity across all wards. System executing predictive triage.
+                 </AlertDescription>
+               </div>
+             </div>
           </Alert>
         )}
       </div>
@@ -132,47 +139,70 @@ const Overview = () => {
         </div>
 
         {/* Recent Activity Timeline (1 col) - Now using HISTORY for a true Audit Log */}
-        <div className="glass-panel flex flex-col min-h-[350px]">
-          <div className="p-5 border-b border-white/5 bg-black/20 flex items-center justify-between">
-            <h2 className="font-bold text-sm text-white uppercase tracking-widest flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary animate-pulse" />
-              Shift Audit Log
-            </h2>
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Live Feed</span>
+        <div className="glass-panel flex flex-col min-h-[450px] border-t-4 border-t-primary">
+          <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
+            <div>
+              <h2 className="font-black text-sm text-foreground uppercase tracking-[0.15em] flex items-center gap-2 mb-1">
+                Clinical Audit Log
+              </h2>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Real-time Telemetry Stream</span>
+              </div>
+            </div>
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <div className="p-0 flex-1 overflow-auto max-h-[400px]">
+          <div className="p-0 flex-1 overflow-auto max-h-[500px] custom-scrollbar">
             {history.length === 0 ? (
-              <div className="p-12 text-center text-slate-600 text-sm font-bold uppercase tracking-widest italic leading-relaxed">
-                Initial Shift State:<br/>Awaiting triage events...
+              <div className="h-full flex flex-col items-center justify-center p-12 text-center opacity-40">
+                <div className="w-12 h-12 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center mb-4">
+                  <Clock className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest italic leading-relaxed">
+                  Awaiting triage events...<br/>Neural registry initializing
+                </p>
               </div>
             ) : (
-              <div className="divide-y divide-white/5">
-                {[...history].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 10).map(entry => (
-                  <div key={entry.timestamp} className="p-4 hover:bg-white/5 transition-all flex items-start gap-3 group cursor-default">
+              <div className="divide-y divide-border/50">
+                {[...history].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 15).map((entry, idx) => (
+                  <div key={`${entry.timestamp}-${idx}`} className="p-5 hover:bg-muted/30 transition-all flex items-start gap-4 group relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 transition-all group-hover:w-1.5 bg-transparent group-hover:bg-primary/30" />
                     <div className={cn(
-                      "mt-1 w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_8px_currentColor]",
-                      entry.actionType === 'Added' ? 'bg-green-500 text-green-500' :
+                      "mt-1 w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_12px_currentColor] transition-transform group-hover:scale-150",
+                      entry.actionType === 'Added' ? 'bg-emerald-500 text-emerald-500' :
                       entry.actionType === 'Updated' ? 'bg-blue-500 text-blue-500' :
-                      'bg-red-500 text-red-500'
+                      'bg-rose-500 text-rose-500'
                     )} />
                     <div className="flex-1">
-                      <div className="flex justify-between items-start gap-2">
-                        <p className="font-bold text-xs text-slate-200 group-hover:text-white transition-colors">{entry.name}</p>
-                        <span className="text-[9px] text-slate-600 font-black uppercase tracking-tighter shrink-0">{formatDistanceToNow(new Date(entry.timestamp))} ago</span>
+                      <div className="flex justify-between items-center gap-2 mb-1">
+                        <p className="font-bold text-sm text-foreground tracking-tight group-hover:text-primary transition-colors">{entry.name}</p>
+                        <span className="text-[9px] text-muted-foreground font-black px-2 py-0.5 rounded-md bg-muted group-hover:bg-primary/10 group-hover:text-primary transition-all uppercase tracking-tighter shrink-0">{formatDistanceToNow(new Date(entry.timestamp))} ago</span>
                       </div>
-                      <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                        {entry.actionType === 'Added' ? 'Admitted to ' : entry.actionType === 'Updated' ? 'Reassigned to ' : 'Discharged from '}
-                        <span className="text-slate-300 font-bold">{entry.assignedBed}</span>
-                        {entry.bedNumber && <span className="ml-1 text-primary">[{entry.bedNumber}]</span>}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border leading-none shadow-sm",
+                          entry.actionType === 'Added' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                          entry.actionType === 'Updated' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                          'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                        )}>
+                          {entry.actionType}
+                        </span>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight flex items-center gap-1.5">
+                          Allocated to <span className="text-foreground/90">{entry.assignedBed}</span>
+                          {entry.bedNumber && <span className="h-4 w-[1px] bg-border mx-0.5" />}
+                          {entry.bedNumber && <span className="text-primary font-black tracking-normal">[{entry.bedNumber}] Floor {entry.floorNumber}</span>}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <div className="p-3 border-t border-white/5 bg-black/10">
-            <p className="text-[9px] font-black text-center text-slate-500 uppercase tracking-[0.2em]">Operational Pulse Stream Active</p>
+          <div className="p-4 border-t border-border bg-muted/5">
+            <p className="text-[9px] font-black text-center text-muted-foreground uppercase tracking-[0.25em] opacity-60">System Core Pulse Active • End of Stream</p>
           </div>
         </div>
       </motion.div>

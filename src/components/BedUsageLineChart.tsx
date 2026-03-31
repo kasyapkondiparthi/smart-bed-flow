@@ -33,8 +33,8 @@ const BedUsageLineChart = ({ patients }: BedUsageLineChartProps) => {
           <TrendingUp className="w-5 h-5 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
         </div>
         <div>
-          <h2 className="text-sm font-bold text-white tracking-widest uppercase mb-0.5">Admission Velocity</h2>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Cumulative Patient Influx</p>
+          <h2 className="text-sm font-bold text-foreground tracking-widest uppercase mb-0.5">Admission Velocity</h2>
+          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Cumulative Patient Influx</p>
         </div>
       </div>
 
@@ -43,32 +43,34 @@ const BedUsageLineChart = ({ patients }: BedUsageLineChartProps) => {
           <AreaChart data={displayData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border" vertical={false} />
             <XAxis 
               dataKey="time" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }} 
+              tick={{ fill: "currentColor", fontSize: 10, fontWeight: "bold" }} 
+              className="text-muted-foreground/60"
               interval={Math.ceil(displayData.length / 5)}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }} 
+              tick={{ fill: "currentColor", fontSize: 10, fontWeight: "bold" }} 
+              className="text-muted-foreground/60"
             />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
                   return (
-                    <div className="rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-xl p-3 shadow-2xl">
-                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">{data.fullTime}</p>
-                      <p className="text-lg font-black text-white">{data.count} <span className="text-[10px] text-slate-500 uppercase tracking-tighter ml-1">Total Patients</span></p>
-                      {data.name && <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase italic">Joined: {data.name}</p>}
+                    <div className="rounded-xl border border-border bg-popover/95 backdrop-blur-xl p-3 shadow-xl">
+                      <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{data.fullTime}</p>
+                      <p className="text-lg font-black text-popover-foreground">{data.count} <span className="text-[10px] text-muted-foreground uppercase tracking-tighter ml-1">Total Patients</span></p>
+                      {data.name && <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase italic">Joined: {data.name}</p>}
                     </div>
                   );
                 }
@@ -78,13 +80,13 @@ const BedUsageLineChart = ({ patients }: BedUsageLineChartProps) => {
             <Area 
               type="monotone" 
               dataKey="count" 
-              stroke="#3b82f6" 
+              stroke="hsl(var(--primary))" 
               strokeWidth={3}
               fillOpacity={1} 
               fill="url(#colorCount)" 
               animationDuration={2000}
-              dot={{ r: 4, fill: "#3b82f6", strokeWidth: 2, stroke: "#0f172a" }}
-              activeDot={{ r: 6, fill: "#fff", stroke: "#3b82f6", strokeWidth: 2 }}
+              dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }}
+              activeDot={{ r: 6, fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
