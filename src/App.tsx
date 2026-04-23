@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect, Component, ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,7 +18,36 @@ import { PatientProvider } from "./context/PatientContext.tsx";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Handled error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex h-screen w-screen items-center justify-center bg-white dark:bg-gray-900 text-black dark:text-white">
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl font-bold">Error loading app</h1>
+            <p>Something went wrong. Please check the console or refresh the page.</p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const MainApp = () => {
   useEffect(() => {
     loadTheme();
   }, []);
@@ -47,7 +76,6 @@ const App = () => {
                   <Route path="history" element={<HistoryPage />} />
                   <Route path="about" element={<AboutPage />} />
                 </Route>
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
@@ -58,4 +86,17 @@ const App = () => {
   );
 };
 
+const App = () => {
+  try {
+    return (
+      <ErrorBoundary>
+        <MainApp />
+      </ErrorBoundary>
+    );
+  } catch (e) {
+    return <div>Error loading app</div>;
+  }
+};
+
 export default App;
+
