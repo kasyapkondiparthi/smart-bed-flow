@@ -1,10 +1,11 @@
+// 🔥 ADD THIS AT VERY TOP (FIRST LINE)
 const originalFetch = window.fetch;
 
 window.fetch = async (...args) => {
     const url = args[0];
 
-    if (typeof url === "string" && url.includes("vercel.com/api")) {
-        console.warn("Blocked Vercel API call:", url);
+    if (typeof url === "string" && url.includes("/api/v6")) {
+        console.warn("Blocked invalid API:", url);
 
         return new Response(JSON.stringify({}), {
             status: 200,
@@ -15,7 +16,10 @@ window.fetch = async (...args) => {
     return originalFetch(...args);
 };
 
-
+// 👇 THEN YOUR NORMAL IMPORTS
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
