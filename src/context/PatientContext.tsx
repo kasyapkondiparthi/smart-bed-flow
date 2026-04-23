@@ -244,17 +244,23 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
         return;
       }
       
-      const { data: inserted, error: insertError } = await supabase.from("patients").insert({
-        name: input.name.trim(),
-        severity: input.severity,
-        needs_icu: input.needsICU,
-        assigned_bed: "Waiting",
-        oxygen_level: input.oxygenLevel,
-        heart_rate: input.heartRate,
-        status: input.severity === "Critical" ? "Confirmed" : "Waiting"
-      }).select().single();
+      const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
+      const response = await fetch(`${API}/add-patient`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: input.name.trim(),
+          severity: input.severity,
+          needs_icu: input.needsICU,
+          phone: "Unknown", // Assuming patient input doesn't have phone yet
+          oxygen_level: input.oxygenLevel,
+          heart_rate: input.heartRate,
+        })
+      });
 
-      if (insertError) throw insertError;
+      if (!response.ok) throw new Error("API failed");
+      const { data: insertedList } = await response.json();
+      const inserted = insertedList?.[0] || insertedList?.data?.[0] || insertedList;
 
       await runGlobalReallocation();
       await fetchPatientsList();

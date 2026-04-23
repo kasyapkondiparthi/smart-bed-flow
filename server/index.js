@@ -13,8 +13,8 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
 );
 
 const app = express();
@@ -129,6 +129,43 @@ app.post("/api/chat", async (req, res) => {
     console.error("Server error:", err);
     res.status(500).json({ error: "Server error" });
   }
+});
+
+// HEALTH CHECK
+app.get("/health", (req, res) => {
+  res.send("API Running");
+});
+
+// ADD PATIENT
+app.post("/add-patient", async (req, res) => {
+  const { name, severity, needs_icu, phone, oxygen_level, heart_rate } = req.body;
+
+  const { data, error } = await supabase
+    .from("patients")
+    .insert([{ 
+      name, 
+      severity, 
+      needs_icu, 
+      phone, 
+      assigned_bed: "Waiting", 
+      oxygen_level: oxygen_level || 95, 
+      heart_rate: heart_rate || 75,
+      status: severity === "Critical" ? "Confirmed" : "Waiting"
+    }])
+    .select();
+
+  if (error) return res.status(400).json(error);
+
+  res.json({ success: true, data });
+});
+
+// GET PATIENTS
+app.get("/patients", async (req, res) => {
+  const { data, error } = await supabase.from("patients").select("*");
+
+  if (error) return res.status(400).json(error);
+
+  res.json(data);
 });
 
 const PORT = process.env.PORT || 5050;
