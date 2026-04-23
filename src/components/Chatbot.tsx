@@ -186,9 +186,19 @@ const Chatbot = () => {
 
   const sendToAI = async (messages: { role: string; content: string }[]) => {
     try {
-      const endpoint = import.meta.env.PROD 
-        ? "/api/chat" 
-        : "http://localhost:5050/api/chat";
+      // Vercel crashes on relative /api/ calls since there's no serverless functions
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      
+      if (!backendUrl) {
+        console.log("Skipping invalid API call: Backend URL not configured");
+        return {
+          content: "AI features are disabled: No backend connected.",
+          actionExecuted: false,
+          actionError: "Disabled in production without VITE_BACKEND_URL"
+        };
+      }
+
+      const endpoint = `${backendUrl}/api/chat`;
         
       const res = await fetch(endpoint, {
         method: "POST",
@@ -196,7 +206,7 @@ const Chatbot = () => {
         body: JSON.stringify({ messages }),
       });
 
-      if (!res.ok) throw new Error("AI Proxy unreachable");
+      if (!res.ok) throw new Error("API failed");
       const data = await res.json();
       return {
         content: data.choices?.[0]?.message?.content || "I am processing your request...",
@@ -204,9 +214,9 @@ const Chatbot = () => {
         actionError: data.actionError
       };
     } catch (err) {
-      console.error("AI Error:", err);
+      console.error("Handled error:", err);
       return {
-        content: "System Error: Neural link offline. Please try again later.",
+        content: "System Error: Neural link offline.",
         actionExecuted: false,
         actionError: (err as Error).message
       };
