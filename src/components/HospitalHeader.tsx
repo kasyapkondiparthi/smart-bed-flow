@@ -1,4 +1,4 @@
-import { LogOut, Bell, Menu, Clock as ClockIcon, Calendar as CalendarIcon, ShieldCheck, Sun, Moon, Monitor } from "lucide-react";
+import { LogOut, Bell, Menu, Clock as ClockIcon, Calendar as CalendarIcon, Sun, Moon, Monitor } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -77,12 +77,11 @@ const HospitalHeader = () => {
         {/* CENTER: Branding */}
         <div className="hidden md:flex flex-col items-center">
           <div className="flex items-center gap-2 mb-0.5">
-            <ShieldCheck className="w-5 h-5 text-primary drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
             <h1 className="text-lg font-black text-foreground dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-200 dark:to-slate-400 uppercase tracking-[0.2em] drop-shadow-sm">
-              Hospital Command Center
+              🏥 Smart Hospital System
             </h1>
           </div>
-          <p className="text-[10px] font-black text-primary/60 uppercase tracking-[0.4em] ml-6">
+          <p className="text-[10px] font-black text-primary/60 uppercase tracking-[0.4em]">
             Bed Allocation Intelligence
           </p>
         </div>

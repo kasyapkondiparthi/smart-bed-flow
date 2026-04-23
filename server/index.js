@@ -131,5 +131,15 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-const PORT = 5050;
-app.listen(PORT, () => console.log(`🚀 Chat Proxy Running on port ${PORT}`));
+const PORT = process.env.PORT || 5050;
+
+// Serve frontend in production
+const distPath = path.join(__dirname, "..", "dist");
+app.use(express.static(distPath));
+
+// Catch-all to serve index.html for React Router
+app.get("*", (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
+
+app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running on port ${PORT}`));

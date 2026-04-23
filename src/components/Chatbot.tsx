@@ -186,7 +186,11 @@ const Chatbot = () => {
 
   const sendToAI = async (messages: { role: string; content: string }[]) => {
     try {
-      const res = await fetch("http://localhost:5050/api/chat", {
+      const endpoint = import.meta.env.PROD 
+        ? "/api/chat" 
+        : "http://localhost:5050/api/chat";
+        
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages }),
