@@ -1,4 +1,4 @@
-// 🔥 ADD THIS AT VERY TOP (FIRST LINE)
+// 🔥 BLOCK INVALID VERCEL API CALLS
 const originalFetch = window.fetch;
 
 window.fetch = async (...args) => {
@@ -16,15 +16,18 @@ window.fetch = async (...args) => {
     return originalFetch(...args);
 };
 
-// 👇 THEN YOUR NORMAL IMPORTS
+// ✅ IMPORTS (ONLY ONCE)
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-
-import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
 import "./index.css";
 
+// ✅ DEBUG
 console.log("App loaded successfully");
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
+// ✅ RENDER
+ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
+);
