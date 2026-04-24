@@ -3,6 +3,8 @@
 <head>
   <script>
     (function() {
+      console.log("Diagnostic: HTML script block executing.");
+      window.__HTML_LOADED__ = true;
       try {
         const theme = localStorage.getItem("theme") || "system";
         if (theme === "dark") {
@@ -13,7 +15,9 @@
           const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
           if (isDark) document.documentElement.classList.add("dark");
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("Theme script error:", e);
+      }
     })();
   </script>
   <meta charset="UTF-8" />
