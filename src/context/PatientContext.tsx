@@ -47,8 +47,13 @@ const PatientContext = createContext<PatientContextType | undefined>(undefined);
 export const PatientProvider = ({ children }: { children: React.ReactNode }) => {
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
-    const saved = localStorage.getItem("hospital_history");
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem("hospital_history");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to parse history from localStorage", e);
+      return [];
+    }
   });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);

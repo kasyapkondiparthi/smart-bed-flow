@@ -56,6 +56,14 @@ if (OriginalEventSource) {
     } as any;
 }
 
+// ✅ GLOBAL ERROR HANDLING (For Blank Screen Debugging)
+window.onerror = (message, source, lineno, colno, error) => {
+    console.error("Global Error Caught:", { message, source, lineno, colno, error });
+};
+window.onunhandledrejection = (event) => {
+    console.error("Unhandled Promise Rejection:", event.reason);
+};
+
 // ✅ IMPORTS (ONLY ONCE)
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -63,11 +71,31 @@ import App from "./App";
 import "./index.css";
 
 // ✅ DEBUG
-console.log("App loaded successfully");
+console.log("Main entry point hit. App component imported.");
 
 // ✅ RENDER
-ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-);
+try {
+    const rootElement = document.getElementById("root");
+    if (!rootElement) {
+        throw new Error("Failed to find the root element");
+    }
+    
+    console.log("Rendering App to root element...");
+    ReactDOM.createRoot(rootElement).render(
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
+    );
+    console.log("App.render() called successfully.");
+} catch (error) {
+    console.error("Critical error during initial render:", error);
+    document.body.innerHTML = `
+        <div style="padding: 20px; color: white; background: #111; height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; font-family: sans-serif;">
+            <div>
+                <h1 style="color: #ff4d4d;">Critical Load Error</h1>
+                <p>The application failed to start. Please check the console for details.</p>
+                <button onclick="location.reload()" style="padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer; border-radius: 4px;">Refresh Page</button>
+            </div>
+        </div>
+    `;
+}
