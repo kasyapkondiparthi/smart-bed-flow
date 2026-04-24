@@ -1,3 +1,4 @@
+console.log("App.tsx: Module evaluation started.");
 import React, { useEffect, Component, ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
