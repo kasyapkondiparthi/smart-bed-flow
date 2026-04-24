@@ -6,6 +6,9 @@
       console.log("Diagnostic: HTML script block executing.");
       window.__HTML_LOADED__ = true;
       try {
+        window.SUPABASE_URL = "https://psvbnkdbcqlqbffchkec.supabase.co";
+        window.SUPABASE_ANON_KEY = "sb_publishable_0bbOrKvCnsy2zXBNQ-mLkg_MKRJ9nNl";
+        
         const theme = localStorage.getItem("theme") || "system";
         if (theme === "dark") {
           document.documentElement.classList.add("dark");

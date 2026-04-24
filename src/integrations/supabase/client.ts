@@ -2,12 +2,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://psvbnkdbcqlqbffchkec.supabase.co";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_0bbOrKvCnsy2zXBNQ-mLkg_MKRJ9nNl";
+// FALLBACK REGISTRY (Bypass build-time stripping)
+const SUPABASE_URL = (window as any).SUPABASE_URL || "https://psvbnkdbcqlqbffchkec.supabase.co";
+const SUPABASE_ANON_KEY = (window as any).SUPABASE_ANON_KEY || "sb_publishable_0bbOrKvCnsy2zXBNQ-mLkg_MKRJ9nNl";
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error("CRITICAL: Supabase environment variables are missing! Check Vercel Environment Variables.");
-}
+console.log("Supabase Client: Initializing with Global/Hardcoded credentials.");
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
