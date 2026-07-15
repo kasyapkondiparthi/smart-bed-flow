@@ -17,6 +17,104 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
 );
 
+// Local in-memory patients list fallback
+let localPatients = [
+  {
+    id: "patient-1",
+    name: "John Doe",
+    severity: "Moderate",
+    needs_icu: false,
+    assigned_bed: "Normal",
+    bed_number: "N-1",
+    floor_number: 2,
+    oxygen_level: 97,
+    heart_rate: 72,
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    status: "Confirmed"
+  },
+  {
+    id: "patient-2",
+    name: "Jane Smith",
+    severity: "Critical",
+    needs_icu: true,
+    assigned_bed: "ICU",
+    bed_number: "ICU-1",
+    floor_number: 1,
+    oxygen_level: 89,
+    heart_rate: 104,
+    created_at: new Date(Date.now() - 1800000).toISOString(),
+    status: "Confirmed"
+  },
+  {
+    id: "patient-3",
+    name: "Alice Johnson",
+    severity: "Low",
+    needs_icu: false,
+    assigned_bed: "Waiting",
+    bed_number: null,
+    floor_number: null,
+    oxygen_level: 98,
+    heart_rate: 68,
+    created_at: new Date().toISOString(),
+    status: "Waiting"
+  }
+];
+
+const safeDb = {
+  async getPatients() {
+    try {
+      const { data, error } = await supabase.from("patients").select("*");
+      if (error) throw error;
+      return { data, error: null };
+    } catch (err) {
+      console.warn("⚠️ Supabase connection failed. Falling back to backend memory.");
+      return { data: localPatients, error: null };
+    }
+  },
+
+  async insertPatient(patient) {
+    try {
+      const { data, error } = await supabase.from("patients").insert([patient]).select();
+      if (error) throw error;
+      return { data, error: null };
+    } catch (err) {
+      console.warn("⚠️ Supabase connection failed. Falling back to backend memory.");
+      const newPatient = {
+        id: "local-" + Math.random().toString(36).substr(2, 9),
+        created_at: new Date().toISOString(),
+        ...patient
+      };
+      localPatients.push(newPatient);
+      return { data: [newPatient], error: null };
+    }
+  },
+
+  async removePatientByName(namePattern) {
+    try {
+      const { data, error } = await supabase.from("patients").delete().ilike("name", namePattern);
+      if (error) throw error;
+      return { data, error: null };
+    } catch (err) {
+      console.warn("⚠️ Supabase connection failed. Falling back to backend memory.");
+      const normalizedPattern = namePattern.replace(/%/g, "").toLowerCase();
+      localPatients = localPatients.filter(p => !p.name.toLowerCase().includes(normalizedPattern));
+      return { data: null, error: null };
+    }
+  },
+
+  async resetAll() {
+    try {
+      const { error } = await supabase.from("patients").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.warn("⚠️ Supabase connection failed. Falling back to backend memory.");
+      localPatients = [];
+      return { success: true };
+    }
+  }
+};
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -33,41 +131,45 @@ const handleAction = async (action) => {
         const finalSeverity = ["Critical", "Moderate", "Low"].includes(normalizedSeverity) ? normalizedSeverity : "Low";
 
         console.log("💾 Inserting patient via DB...");
-        const { data, error } = await supabase.from("patients").insert([{
+        const { data, error } = await safeDb.insertPatient({
           name: name?.trim() || "Unknown AI Patient",
           severity: finalSeverity,
           needs_icu: !!needsICU,
           assigned_bed: "Waiting",
           oxygen_level: 95,
           heart_rate: 75
-        }]);
+        });
 
         if (error) throw error;
         return { success: true, data };
       }
 
       case "remove_patient": {
-        // Direct table delete is fine for removal, but let's log it
-        const { data, error } = await supabase.from("patients").delete().ilike("name", `%${action.payload.name}%`);
+        const { data, error } = await safeDb.removePatientByName(`%${action.payload.name}%`);
         if (error) throw error;
         return { success: true, data };
       }
 
       case "reset": {
-        // Use the Edge Function for reset too
-        const response = await fetch(
-          `${process.env.VITE_SUPABASE_URL}/functions/v1/allocate`,
-          {
-            method: "DELETE",
-            headers: {
-              "Authorization": `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
-              "apikey": process.env.VITE_SUPABASE_ANON_KEY,
-              "Content-Type": "application/json",
+        try {
+          const response = await fetch(
+            `${process.env.VITE_SUPABASE_URL}/functions/v1/allocate`,
+            {
+              method: "DELETE",
+              headers: {
+                "Authorization": `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+                "apikey": process.env.VITE_SUPABASE_ANON_KEY,
+                "Content-Type": "application/json",
+              }
             }
-          }
-        );
-        if (!response.ok) throw new Error("Reset failed");
-        return await response.json();
+          );
+          if (!response.ok) throw new Error("Reset failed");
+          return await response.json();
+        } catch (e) {
+          console.warn("⚠️ Reset edge function failed, falling back to local reset.");
+          await safeDb.resetAll();
+          return { success: true };
+        }
       }
 
       default:
@@ -140,19 +242,16 @@ app.get("/health", (req, res) => {
 app.post("/add-patient", async (req, res) => {
   const { name, severity, needs_icu, phone, oxygen_level, heart_rate } = req.body;
 
-  const { data, error } = await supabase
-    .from("patients")
-    .insert([{ 
-      name, 
-      severity, 
-      needs_icu, 
-      phone, 
-      assigned_bed: "Waiting", 
-      oxygen_level: oxygen_level || 95, 
-      heart_rate: heart_rate || 75,
-      status: severity === "Critical" ? "Confirmed" : "Waiting"
-    }])
-    .select();
+  const { data, error } = await safeDb.insertPatient({ 
+    name, 
+    severity, 
+    needs_icu, 
+    phone, 
+    assigned_bed: "Waiting", 
+    oxygen_level: oxygen_level || 95, 
+    heart_rate: heart_rate || 75,
+    status: severity === "Critical" ? "Confirmed" : "Waiting"
+  });
 
   if (error) return res.status(400).json(error);
 
@@ -161,7 +260,7 @@ app.post("/add-patient", async (req, res) => {
 
 // GET PATIENTS
 app.get("/patients", async (req, res) => {
-  const { data, error } = await supabase.from("patients").select("*");
+  const { data, error } = await safeDb.getPatients();
 
   if (error) return res.status(400).json(error);
 

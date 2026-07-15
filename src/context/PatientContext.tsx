@@ -248,6 +248,33 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
         toast.error("Patient name is required");
         return;
       }
+
+      if ((supabase as any).isMock) {
+        const { data: inserted, error } = await supabase
+          .from("patients")
+          .insert([{ 
+            name: input.name.trim(), 
+            severity: input.severity, 
+            needs_icu: input.needsICU,
+            assigned_bed: "Waiting",
+            oxygen_level: input.oxygenLevel || Math.floor(Math.random() * (100 - 90 + 1)) + 90,
+            heart_rate: input.heartRate || Math.floor(Math.random() * (120 - 60 + 1)) + 60,
+            status: "Waiting"
+          }])
+          .select()
+          .single();
+
+        if (error) throw new Error(error.message);
+
+        await runGlobalReallocation();
+        await fetchPatientsList();
+
+        const { data: updatedPatient } = await supabase.from("patients").select("*").eq("id", inserted.id).single();
+        if (updatedPatient) logHistory(updatedPatient, "Added");
+
+        toast.success(`${inserted.name} processed successfully`);
+        return;
+      }
       
       const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
       const response = await fetch(`${API}/add-patient`, {
@@ -279,7 +306,7 @@ export const PatientProvider = ({ children }: { children: React.ReactNode }) => 
     } finally {
       setLoading(false);
     }
-  }, [fetchPatientsList, logHistory]);
+  }, [fetchPatientsList, logHistory, runGlobalReallocation]);
 
   const handleUpdatePatient = useCallback(async (id: string, input: PatientInput) => {
     setLoading(true);
